@@ -122,33 +122,6 @@ class CoAP(object):
 
             self._socket.bind(self.server_address)
 
-        threading.Thread(target=self.worker).start()
-
-    def worker(self):
-
-        worker_server_address = ('127.0.0.1', 5000)
-
-        print 'WORKER RUNNING...'
-
-        sock_worker = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-
-        sock_worker.bind(worker_server_address)
-
-        while True:
-            print 'WAITING..'
-            try:
-                data, client_address = sock_worker.recvfrom(1024)
-                print 'DATA: ', data
-                print 'CLIENT ADDRESS: ', client_address
-
-                # json datagram to object
-                # x = json.loads(data, object_hook=lambda d: namedtuple('X', d.keys())(*d.values()))
-
-                self.remove_resource('basic')
-
-            except socket.timeout:
-                print 'TIMEOUT'
-                continue
 
     def purge(self):
         """
