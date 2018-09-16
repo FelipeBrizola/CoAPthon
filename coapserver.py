@@ -2,66 +2,94 @@
 
 import getopt
 import sys
+import socket
+import threading
 from coapthon.server.coap import CoAP
 from exampleresources import BasicResource, Long, Separate, Storage, Big, voidResource, XMLResource, ETAGResource, \
     Child, \
     MultipleEncodingResource, AdvancedResource, AdvancedResourceSeparate
 
-__author__ = 'Giacomo Tanganelli'
+__author__ = 'Felipe Brizola'
 
+class AvailableResources():
+    def __init__(self, uri=None, resouce_class=None):
+        self.uri = uri
+        self.resouce_class = resouce_class
+
+    def get_all(self):
+        list = []
+        list.append(AvailableResources('/basic', BasicResource))
+        list.append(AvailableResources('/storage', Storage))
+        list.append(AvailableResources('/separate', Separate))
+        list.append(AvailableResources('/long', Long))
+        list.append(AvailableResources('/big', Big))
+        list.append(AvailableResources('/void', voidResource))
+        list.append(AvailableResources('/xml', XMLResource))
+        list.append(AvailableResources('/encoding', MultipleEncodingResource))
+        list.append(AvailableResources('/etag', ETAGResource))
+        list.append(AvailableResources('/child', Child))
+        list.append(AvailableResources('/advanced', AdvancedResource))
+        
+        return list
 
 class CoAPServer(CoAP):
-    def __init__(self, host, port, multicast=False):
-        CoAP.__init__(self, (host, port), multicast)
+    def __init__(self, host, port):
+        CoAP.__init__(self, (host, port))
+
         self.add_resource('basic/', BasicResource())
         self.add_resource('storage/', Storage())
-        self.add_resource('separate/', Separate())
-        self.add_resource('long/', Long())
-        self.add_resource('big/', Big())
-        self.add_resource('void/', voidResource())
-        self.add_resource('xml/', XMLResource())
-        self.add_resource('encoding/', MultipleEncodingResource())
-        self.add_resource('etag/', ETAGResource())
-        self.add_resource('child/', Child())
-        self.add_resource('advanced/', AdvancedResource())
-        self.add_resource('advancedSeparate/', AdvancedResourceSeparate())
 
-        print "CoAP Server start on " + host + ":" + str(port)
+        print 'CoAP Server start on ' + host + ':' + str(port)
         print self.root.dump()
 
+def worker(server):
 
-def usage():  # pragma: no cover
-    print "coapserver.py -i <ip address> -p <port>"
+        worker_server_address = (server.server_address[0], 5000)
+        sock_worker = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        sock_worker.bind(worker_server_address)
+
+        while True:
+            try:
+                data, client_address = sock_worker.recvfrom(1024)
+
+                print 'Data: ', data
+                print 'Client address: ', client_address
+
+                operation = data[0]
+                resource = data[2:]
+
+                for r in AvailableResources().get_all():
+                    if (r.uri == resource):
+
+                        if operation == 'a':
+                            server.add_resource(r.uri, r.resouce_class())
+                            sock_worker.sendto('Resouce created \n ' + str(server.root.dump()), client_address)                
+                        elif operation == 'r':
+                            server.remove_resource(r.uri)
+                            sock_worker.sendto('Resouce removed \n ' + str(server.root.dump()), client_address)                
+                            
+
+            except socket.timeout:
+                print 'TIMEOUT'
+                continue    
+
+def usage():
+    print 'resouce not found'
 
 
-def main(argv):  # pragma: no cover
-    ip = "0.0.0.0"
+if __name__ == '__main__':  # pragma: no cover
+
+    ip = '0.0.0.0'
     port = 5683
-    multicast = False
-    try:
-        opts, args = getopt.getopt(argv, "hi:p:m", ["ip=", "port=", "multicast"])
-    except getopt.GetoptError:
-        usage()
-        sys.exit(2)
-    for opt, arg in opts:
-        if opt == '-h':
-            usage()
-            sys.exit()
-        elif opt in ("-i", "--ip"):
-            ip = arg
-        elif opt in ("-p", "--port"):
-            port = int(arg)
-        elif opt in ("-m", "--multicast"):
-            multicast = True
+    server = CoAPServer(ip, port)
+    threading.Thread(target=worker, args=(server,)).start()
 
-    server = CoAPServer(ip, port, multicast)
     try:
         server.listen(10)
     except KeyboardInterrupt:
-        print "Server Shutdown"
+        print 'Server Shutdown'
         server.close()
-        print "Exiting..."
+        print 'Exiting...'
+    finally:
+        server.close()
 
-
-if __name__ == "__main__":  # pragma: no cover
-    main(sys.argv[1:])
