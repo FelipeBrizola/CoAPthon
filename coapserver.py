@@ -44,38 +44,36 @@ class CoAPServer(CoAP):
 
 def worker(server):
 
-        worker_server_address = (server.server_address[0], 5000)
-        sock_worker = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        sock_worker.bind(worker_server_address)
+    print 'worker running on address: ' + str(server.server_address[0]) + ' and port ' + str(5000)
 
-        while True:
-            try:
-                data, client_address = sock_worker.recvfrom(1024)
+    worker_server_address = (server.server_address[0], 5000)
+    sock_worker = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    sock_worker.bind(worker_server_address)
 
-                print 'Data: ', data
-                print 'Client address: ', client_address
+    while True:
+        try:
+            data, client_address = sock_worker.recvfrom(1024)
 
-                operation = data[0]
-                resource = data[2:]
+            operation = data[0]
+            resource = data[2:]
 
-                for r in AvailableResources().get_all():
-                    if (r.uri == resource):
+            if operation == 'l':
+                sock_worker.sendto('Resouces \n ' + str(server.root.dump()), client_address)                
 
-                        if operation == 'l':
-                            print 'list resources: '
-                            print server.root.dump()
+            for r in AvailableResources().get_all():
+                if (r.uri == resource):
 
-                        elif operation == 'a':
-                            server.add_resource(r.uri, r.resouce_class())
-                            sock_worker.sendto('Resouce created \n ' + str(server.root.dump()), client_address)                
-                        elif operation == 'd':
-                            server.remove_resource(r.uri)
-                            sock_worker.sendto('Resouce removed \n ' + str(server.root.dump()), client_address)                
-                            
+                    if operation == 'a':
+                        server.add_resource(r.uri, r.resouce_class())
+                        sock_worker.sendto('Resouce created \n ' + str(server.root.dump()), client_address)                
+                    elif operation == 'd':
+                        server.remove_resource(r.uri)
+                        sock_worker.sendto('Resouce removed \n ' + str(server.root.dump()), client_address)                
+                        
 
-            except socket.timeout:
-                print 'TIMEOUT'
-                continue    
+        except socket.timeout:
+            print 'TIMEOUT'
+            continue    
 
 def usage():
     print 'resouce not found'
@@ -83,7 +81,7 @@ def usage():
 
 if __name__ == '__main__':  # pragma: no cover
 
-    ip = '0.0.0.0'
+    ip = '127.0.0.1'
     port = 5683
     server = CoAPServer(ip, port)
     threading.Thread(target=worker, args=(server,)).start()

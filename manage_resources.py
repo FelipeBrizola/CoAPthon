@@ -29,9 +29,10 @@ class Infrastructure():
                 break
 
         if (target_container):    
-            (exit_code, output) = container.exec_run(workdir='/CoAPthon', cmd='ifconfig')
+            (exit_code, output) = container.exec_run(workdir='/CoAPthon/resource_mapping', cmd='python test.py -o a  -r' + ' ' + resource)
             print output
-            print '    resource ' + resource + ' has added on ' + str(target_container.name)
+            if exit_code == 0:
+                print '    resource ' + resource + ' has added on ' + str(target_container.name)
         else:
             print '    container not found'
 
@@ -51,9 +52,10 @@ class Infrastructure():
                 break
 
         if (target_container):    
-            (exit_code, output) = container.exec_run(workdir='/CoAPthon', cmd='ifconfig')
+            (exit_code, output) = container.exec_run(workdir='/CoAPthon/resource_mapping', cmd='python test.py -o d  -r' + ' ' + resource)
             print output
-            print '    resource ' + resource + ' has deleted from ' + str(target_container.name)
+            if exit_code == 0:
+                print '    resource ' + resource + ' has deleted from ' + str(target_container.name)
         else:
             print '    container not found'
 
@@ -73,7 +75,7 @@ class Infrastructure():
                 break
 
         if (target_container):    
-            (exit_code, output) = container.exec_run(workdir='/CoAPthon', cmd='ifconfig')
+            (exit_code, output) = container.exec_run(workdir='/CoAPthon/resource_mapping', cmd='python test.py -o l')
             print output
         else:
             print '    container not found'
@@ -103,16 +105,18 @@ if __name__ == '__main__':
             elif o in ('-r', '--resource'):
                 resource = arg
 
-        if (operation == 'list' and id):
+        print operation, id
+
+        if (operation == 'l' and id):
             infrastructure.list_resources(id)
 
-        elif (operation == 'add' and id and resource):
+        elif (operation == 'a' and id and resource):
             infrastructure.add_resource(id, resource)
 
-        elif (operation == 'del' and id and resource):
+        elif (operation == 'd' and id and resource):
             infrastructure.del_resource(id, resource)
         else:
-            raise ValueError('Missing params')
+            raise ValueError('manage_resources: Missing params')
 
     except getopt.GetoptError as err:
         print str(err)

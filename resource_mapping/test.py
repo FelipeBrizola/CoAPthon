@@ -3,7 +3,8 @@ import socket
 import struct
 import threading
 import time
-
+import getopt
+import sys
 
 class Client():
 
@@ -33,6 +34,7 @@ class Client():
     def _recvdata(self):
         SVR_RESP = '\FF'
         data = ""
+
         try:
             while True:
                 chunk = self.client.recvfrom(1024)
@@ -82,12 +84,49 @@ if __name__ == "__main__":
     client.readers.append(client.client)
     client.reader_callback = callback
     listener_thread = threading.Thread(target=client.cycle)
-    listener_thread.start()
+
+    try:
+        opts, args = getopt.getopt(sys.argv[1:], 'o:i:r:', ['operation=', 'id=', 'resource='])
+
+        operation = None
+        resource = None
+        id = None
+
+        for o, arg in opts:
+
+            if o in ('-o', '--operation'):
+                operation = arg
+
+            elif o in ('-r', '--resource'):
+                resource = arg
+
+        if (operation == 'l'):
+            client.wbuff = 'l'
+            client.writers.append(client.client)
+            listener_thread.start()
+
+        elif (operation == 'a' and resource):
+            client.wbuff = 'a ' + resource
+            client.writers.append(client.client)
+            listener_thread.start()
+
+        elif (operation == 'd' and resource):
+            client.wbuff = 'd ' + resource
+            client.writers.append(client.client)
+            listener_thread.start()
+
+        else:
+            raise ValueError('test: Missing params')
+
+    except getopt.GetoptError as err:
+        print str(err)
+        sys.exit(2)
+
+
+    
 
     # Wait 3 seconds before broadcasting 0x00
     # time.sleep(3)
-    client.wbuff = 'r /storage'
-    client.writers.append(client.client)
 
     # Wait for a timeout period (in case of slow resp) before closing
     time.sleep(10)
