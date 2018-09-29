@@ -61,10 +61,14 @@ def worker(server):
                 for r in AvailableResources().get_all():
                     if (r.uri == resource):
 
-                        if operation == 'a':
+                        if operation == 'l':
+                            print 'list resources: '
+                            print server.root.dump()
+
+                        elif operation == 'a':
                             server.add_resource(r.uri, r.resouce_class())
                             sock_worker.sendto('Resouce created \n ' + str(server.root.dump()), client_address)                
-                        elif operation == 'r':
+                        elif operation == 'd':
                             server.remove_resource(r.uri)
                             sock_worker.sendto('Resouce removed \n ' + str(server.root.dump()), client_address)                
                             

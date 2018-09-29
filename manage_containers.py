@@ -211,16 +211,15 @@ if __name__ == '__main__':
         opts, args = getopt.getopt(sys.argv[1:], 'ao:r:b:po', [
                                    'add', 'remove=', 'build=', 'purge'])
 
+
+        # TODO: add or remove resource from container
         for o, arg in opts:
             if o in ('-a', '--add'):
                 infrastructure.add_container()
-
             elif o in ('-r', '--remove'):
                 infrastructure.remove_container(arg)
-
             elif o in ('-b', '--build'):
                 infrastructure.build_farm(int(arg))
-
             elif o in ('-p', '--purge'):
                 infrastructure.purge()
 
