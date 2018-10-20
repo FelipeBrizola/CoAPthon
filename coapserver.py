@@ -58,17 +58,22 @@ def worker(server):
             resource = data[2:]
 
             if operation == 'l':
-                sock_worker.sendto('Resouces \n ' + str(server.root.dump()), client_address)                
+                sock_worker.sendto('    Resouces: ' + str(server.root.dump()), client_address)  
+                continue
 
             for r in AvailableResources().get_all():
                 if (r.uri == resource):
 
                     if operation == 'a':
                         server.add_resource(r.uri, r.resouce_class())
-                        sock_worker.sendto('Resouce created \n ' + str(server.root.dump()), client_address)                
+                        sock_worker.sendto('    Resouce created: ' + str(server.root.dump()), client_address)                
+                        continue
                     elif operation == 'd':
                         server.remove_resource(r.uri)
-                        sock_worker.sendto('Resouce removed \n ' + str(server.root.dump()), client_address)                
+                        sock_worker.sendto('    Resouce removed: ' + str(server.root.dump()), client_address)
+                        continue
+                
+            sock_worker.sendto('    Resource not found', client_address)
                         
 
         except socket.timeout:
@@ -81,7 +86,7 @@ def usage():
 
 if __name__ == '__main__':  # pragma: no cover
 
-    ip = '127.0.0.1'
+    ip = socket.gethostbyname(socket.gethostname())
     port = 5683
     server = CoAPServer(ip, port)
     threading.Thread(target=worker, args=(server,)).start()
