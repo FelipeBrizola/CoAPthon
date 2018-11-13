@@ -9,7 +9,7 @@ __author__ = 'Felipe Brizola'
 class TemperatureResource(Resource):
     def __init__(self, name="temperature", coap_server=None):
         super(TemperatureResource, self).__init__(name, coap_server, visible=True,
-                                            observable=True, allow_children=True)
+                                            observable=False, allow_children=True)
         self.payload = None
         self.content_type = "text/plain"
 
@@ -20,7 +20,7 @@ class TemperatureResource(Resource):
 class WindResource(Resource):
     def __init__(self, name="wind", coap_server=None):
         super(WindResource, self).__init__(name, coap_server, visible=True,
-                                            observable=True, allow_children=True)
+                                            observable=False, allow_children=True)
         self.payload = None
         self.content_type = "text/plain"
 
@@ -31,7 +31,7 @@ class WindResource(Resource):
 class HumidityResource(Resource):
     def __init__(self, name="humidity", coap_server=None):
         super(HumidityResource, self).__init__(name, coap_server, visible=True,
-                                            observable=True, allow_children=True)
+                                            observable=False, allow_children=True)
         self.payload = None
         self.content_type = "text/plain"
 
@@ -42,10 +42,14 @@ class HumidityResource(Resource):
 class PrecipitationResource(Resource):
     def __init__(self, name="precipitation", coap_server=None):
         super(PrecipitationResource, self).__init__(name, coap_server, visible=True,
-                                            observable=True, allow_children=True)
+                                            observable=False, allow_children=True)
         self.payload = None
-        self.content_type = "text/plain"
+        self.content_type = "application/json"
 
     def render_GET(self, request):
-        self.payload = str(randint(0, 100)) + ' cm'
+        
+        self.payload = {
+            'precipitation': str(randint(0, 100)),
+            'unit': 'cm'
+        }
         return self
